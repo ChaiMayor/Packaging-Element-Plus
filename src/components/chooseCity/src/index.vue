@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import type { City, CityV2 } from "../types";
 
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import city from "../lib/city";
 import province from "../lib/province.json";
 
@@ -147,9 +147,18 @@ const filterMethod = (val: string) => {
   } else {
     if (chooseAddress.value === '按城市') {
       if (/[A-z]/.test(val)) {
+        console.log('英文');
+
         options.value = allCity.filter((item) => item.value.includes(val))
+
+        console.log(options.value);
+
       } else {
+        console.log('中文');
+
         options.value = allCity.filter((item) => item.label.includes(val))
+
+        console.log(options.value);
       }
     } else {
       options.value = allCity.filter((item) => item.label.includes(val))
@@ -161,7 +170,6 @@ const filterMethod = (val: string) => {
 const visibleChange = () => {
   options.value = allCity
 }
-
 </script>
 
 <style lang="scss" scoped>
