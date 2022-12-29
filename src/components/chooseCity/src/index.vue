@@ -18,7 +18,7 @@
         <el-select-v2 @change="selectCity" v-model="value" @visible-change="visibleChange" :filter-method="filterMethod"
           filterable :options="options" placeholder="请选择城市" style="width: 240px" />
       </div>
-      <template :class="['display_container', { show: chooseAddress === '按城市' }]">
+      <template v-if="chooseAddress === '按城市'">
         <div class="tag_container">
           <div class="tag_container_item" @click="skipToScroll(item)"
             v-for="(item, index) in Object.keys(cityData.cities)" :key="index">{{ item }}
@@ -37,7 +37,7 @@
           </el-row>
         </el-scrollbar>
       </template>
-      <template :class="['display_container', { show: chooseAddress !== '按城市' }]">
+      <template v-if="chooseAddress !== '按城市'">
         <div class="tag_container">
           <div class="tag_container_item" @click="skipToScrollProvince(key)" v-for="(value, key) in province"
             :key="key">{{ key }}
@@ -128,6 +128,7 @@ const skipToScroll = (id: string) => {
 // 跳转对应的滚动条
 const skipToScrollProvince = (id: string) => {
   let el = document.getElementById(id)
+
   if (el) el.scrollIntoView({
     // 平滑滑动到元素高度
     // behavior: "smooth",

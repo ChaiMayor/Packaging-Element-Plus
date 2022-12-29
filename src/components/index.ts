@@ -9,6 +9,7 @@ import progress from "./progress/index.ts";
 import chooseTime from "./chooseTime/index.ts";
 import chooseDate from "./chooseDate/index.ts";
 import chooseCity from "./chooseCity/index.ts";
+import form from "./form/index.ts";
 
 const allComponents = [
   chooseIcon,
@@ -21,6 +22,7 @@ const allComponents = [
   chooseTime,
   chooseDate,
   chooseCity,
+  form,
 ];
 
 export default {

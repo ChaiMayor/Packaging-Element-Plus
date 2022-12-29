@@ -12,14 +12,14 @@
 
 ~~~shell
 # 组件库
-npm i element-plus 
+npm i element-plus
 # 依赖
-npm i sass sass-loader
+npm i sass sass-loader -D
 ~~~
 
 
 
-## 二、项目开始
+# 二、项目开始
 
 ## 1. 自定义 icon 
 
@@ -27,8 +27,11 @@ npm i sass sass-loader
 
 ```shell
 # NPM
-$ npm install @element-plus/icons-vue
+$ npm install @element-plus/icons-vue @wangeditor/editor
+$ npm install lodash @types/lodash    # 使用的内置的 cloneDeep 深拷贝方法
 ```
+
+
 
 
 

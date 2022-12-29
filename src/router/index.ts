@@ -59,6 +59,11 @@ const router = createRouter({
           name: "chooseCity",
           component: () => import("@/views/chooseCity/index.vue"),
         },
+        {
+          path: "form",
+          name: "form",
+          component: () => import("@/views/form/index.vue"),
+        },
       ],
     },
   ],
