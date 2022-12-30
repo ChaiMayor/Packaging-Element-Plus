@@ -56,7 +56,7 @@ export default [
     path: "/chooseCity",
   },
   {
-    title: "增强型表单",
+    title: "表单",
     icon: "el-icon-operation",
     path: "/form",
   },

@@ -67,6 +67,12 @@ export interface FormConfig {
     disabled?: boolean;
     limit?: number;
   };
+  // 富文本的配置项
+  // 配置页 https://www.wangeditor.com/v5/editor-config.html#placeholder
+  editorAttrs?: {
+    placeholder?: string;
+    [key: string]: any;
+  };
 }
 
 // ElementPlus校验表单的ts文件

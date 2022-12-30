@@ -1,6 +1,6 @@
 <template>
   <div>
-    <m-form :options="options" @onSuccess="" :label-width="100">
+    <m-form ref="form" :options="options" @onSuccess="" :label-width="100">
       <!-- 上传组件区域 -->
       <template #uploadArea>
         <el-button type="primary">Click to upload</el-button>
@@ -14,7 +14,7 @@
       <template #action="scope">
         <el-form-item>
           <el-button type="primary" @click="submitForm(scope)">提交</el-button>
-          <el-button @click="resetForm(scope)">重置</el-button>
+          <el-button @click="resetForm()">重置</el-button>
         </el-form-item>
       </template>
     </m-form>
@@ -24,6 +24,9 @@
 <script setup lang="ts">
 import type { FormConfig, FormInstance } from '@/components/form/src/types/types';
 import { ElButton, ElFormItem, ElMessage } from 'element-plus';
+import { ref } from "vue";
+
+const form = ref()
 
 interface Scope {
   form: FormInstance,
@@ -205,6 +208,9 @@ const options: FormConfig[] = [
     value: '',
     prop: 'wangeditor',
     label: '描述',
+    editorAttrs: {
+      placeholder: '不要输入内容了',
+    },
     rules: [
       {
         required: true,
@@ -228,9 +234,8 @@ const submitForm = (scope: Scope | undefined) => {
   })
 }
 // 重置表单
-const resetForm = (scope: Scope | undefined) => {
-  if (!scope!.form) return
-  scope!.form.resetFields()
+const resetForm = () => {
+  form.value.resetFields()
   ElMessage.success('重置成功')
 }
 

@@ -16,12 +16,11 @@
         </el-upload>
         <!-- 富文本编辑器 -->
         <template v-if="item.type === 'editor'">
-          <div style="border: 1px solid #ccc">
-            <Toolbar style="border-bottom: 1px solid #ccc" :editor="editorRef" :defaultConfig="toolbarConfig"
-              mode="default" />
-            <Editor style="height: 500px; overflow-y: hidden;" @onChange="handleChange" v-model="valueHtml"
-              :defaultConfig="editorConfig" mode="default" @onCreated="handleCreated" />
-          </div>
+          <wangeditor @handleChange="handleChange" v-bind="item.editorAttrs">
+            <template #instance="scope">
+              {{ getEditorInstance(scope) }}
+            </template>
+          </wangeditor>
         </template>
       </el-form-item>
       <!-- 存在children -->
@@ -39,15 +38,14 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType, Ref, ShallowRef } from "vue";
+import type { PropType } from "vue";
 import type { FormConfig, FormInstance } from './types/types';
 import { ElForm, ElFormItem, ElUpload, type UploadFile, type UploadFiles, type UploadRawFile, type UploadRequestHandler, type UploadUserFile } from "element-plus";
 import type { Awaitable } from "@vueuse/shared";
 
-import { ref, onMounted, reactive, watch, shallowRef, nextTick } from 'vue'
-import '@wangeditor/editor/dist/css/style.css' // 引入 css
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import { ref, onMounted, watch } from 'vue'
 import cloneDeep from 'lodash/cloneDeep';
+import wangeditor from "@/components/wangeditor/src/index.vue";
 
 // 上传表单的方法
 let emits = defineEmits(['on-preview', 'on-remove', 'on-success', 'on-error', 'on-progress', 'on-change', 'before-upload', 'before-remove', 'on-exceed'])
@@ -70,21 +68,10 @@ let model = ref<any>({})
 let rules = ref<any>({})
 // 表单的对象
 let form = ref<FormInstance | null>()
-// 富文本编辑器内容
-let editorRef: ShallowRef | null = null
-let valueHtml: Ref | null = null
-let toolbarConfig: object | null = null
-let editorConfig = reactive({
-  placeholder: '请输入内容...'
-})
-let handleCreated: Function | null = null
+// 富文本对象
 let editor: any = null
-// 富文本编辑器内容修改时
-const handleChange = (editor: any) => {
-  let editorItem = props.options.find((item: FormConfig) => item.type === 'editor')
-  if (!editorItem || editor.getHtml() === '<p><br></p>') return
-  model.value[editorItem!.prop!] = editor.getHtml()
-};
+// 富文本的FormConfig对象
+let editorItem: any = null
 
 // 初始化表单
 const initForm = () => {
@@ -107,23 +94,13 @@ const initForm = () => {
 
 // 初始化富文本编辑器
 const initEditor = (item: FormConfig) => {
-  // 编辑器实例，必须用 shallowRef
-  editorRef = shallowRef()
-  // 内容 HTML
-  valueHtml = ref()
-  // 初始化内容
-  toolbarConfig = {}
-  // editorConfig = { placeholder: '请输入内容...' }
-  handleCreated = (editor: any) => {
-    editorRef!.value = editor // 记录 editor 实例，重要！
-  }
-  // 绑定传递过来的值
-  nextTick(() => {
-    editor = editorRef!.value // 获取 editor ，必须等待它渲染完之后
-    if (editor == null && !item.value) return
-
-    valueHtml!.value = item.value
-  })
+  editorItem = item
+  // 设置初始值
+  setTimeout(() => {
+    if (editor) {
+      editor.setHtml(item.value)
+    }
+  }, 0);
 }
 
 // 进入页面遍历出来表单的总对象
@@ -168,6 +145,32 @@ let beforeRemove = (file: UploadFile, fileList: UploadFiles): Awaitable<boolean>
 let onExceed = (files: File[], fileList: UploadUserFile[]) => {
   emits('on-exceed', { files, fileList })
 }
+
+// 获取富文本实例对象
+const getEditorInstance = (instance: any) => {
+  if (!instance.editorRef) return
+  editor = instance.editorRef
+}
+// 重新更新文本内容
+const handleChange = () => {
+  if (editor) {
+    model.value[editorItem.prop] = editor.getHtml()
+  }
+};
+
+// 重置表单项内容
+const resetFields = () => {
+  // 重置表单项
+  form.value?.resetFields()
+  // 重置富文本表单项
+  if (editor) {
+    editor.setHtml(editorItem.value)
+  }
+}
+
+defineExpose({
+  resetFields
+})
 
 </script>
 
