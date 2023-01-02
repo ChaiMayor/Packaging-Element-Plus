@@ -1,6 +1,11 @@
 <template>
   <div>
-    <m-form ref="form" :options="options" @onSuccess="" :label-width="100">
+    <el-button type="primary" size="default" @click="open">打开弹窗</el-button>
+    <m-modal-form v-model:visible="visible" :options="options" title="编辑用户">
+      <template #footer="{ form }">
+        <el-button @click="close(form)">重置</el-button>
+        <el-button type="primary" @click="submit(form)">提交</el-button>
+      </template>
       <!-- 上传组件区域 -->
       <template #uploadArea>
         <el-button type="primary">Click to upload</el-button>
@@ -10,22 +15,15 @@
           jpg/png files with a size less than 500KB.
         </div>
       </template>
-      <!-- 表单的提交重置按钮区域 -->
-      <template #action>
-        <el-form-item>
-          <el-button type="primary" @click="submitForm()">提交</el-button>
-          <el-button @click="resetForm()">重置</el-button>
-        </el-form-item>
-      </template>
-    </m-form>
+    </m-modal-form>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { FormConfig } from '@/components/form/src/types/types';
-import { ref } from "vue";
+import { ElButton } from 'element-plus';
+import { ref } from 'vue'
 
-const form = ref()
 
 const options: FormConfig[] = [
   {
@@ -88,7 +86,7 @@ const options: FormConfig[] = [
       {
         required: true,
         message: '员工不能为空',
-        trigger: 'blur',
+        trigger: 'change',
       },
     ],
     children: [
@@ -123,7 +121,7 @@ const options: FormConfig[] = [
       {
         required: true,
         message: '爱好不能为空',
-        trigger: 'blur',
+        trigger: 'change',
       },
     ],
     children: [
@@ -160,7 +158,7 @@ const options: FormConfig[] = [
       {
         required: true,
         message: '性别不能为空',
-        trigger: 'blur',
+        trigger: 'change',
       },
     ],
     children: [
@@ -215,19 +213,27 @@ const options: FormConfig[] = [
   }
 ]
 
-// 上传表单
-const submitForm = () => {
-  form.value.submitFields()
-}
-// 重置表单
-const resetForm = () => {
-  form.value.resetFields()
+
+let visible = ref<boolean>(false)
+
+const open = () => {
+  visible.value = true
 }
 
-// 上传成功
-const onSuccess = (response: any) => {
-  console.log(response)
+// 关闭弹窗 
+const close = (form: any) => {
+  form.resetFields()
+  visible.value = false
 }
+
+// 提交表单
+const submit = (form: any) => {
+  if (form.submitFields()) {
+    visible.value = false
+  }
+}
+
+
 </script>
 
 <style lang="less" scoped>

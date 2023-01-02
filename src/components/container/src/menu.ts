@@ -60,4 +60,9 @@ export default [
     icon: "el-icon-operation",
     path: "/form",
   },
+  {
+    title: "弹框表单",
+    icon: "el-icon-setting",
+    path: "/modalForm",
+  },
 ];

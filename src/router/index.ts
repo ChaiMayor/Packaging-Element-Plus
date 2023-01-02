@@ -64,6 +64,11 @@ const router = createRouter({
           name: "form",
           component: () => import("@/views/form/index.vue"),
         },
+        {
+          path: "modalForm",
+          name: "modalForm",
+          component: () => import("@/views/modalForm/index.vue"),
+        },
       ],
     },
   ],

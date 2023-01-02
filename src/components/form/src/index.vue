@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 import type { FormConfig, FormInstance } from './types/types';
-import { ElForm, ElFormItem, ElUpload, type UploadFile, type UploadFiles, type UploadRawFile, type UploadRequestHandler, type UploadUserFile } from "element-plus";
+import { ElMessage, ElForm, ElFormItem, ElUpload, type UploadFile, type UploadFiles, type UploadRawFile, type UploadRequestHandler, type UploadUserFile } from "element-plus";
 import type { Awaitable } from "@vueuse/shared";
 
 import { ref, onMounted, watch } from 'vue'
@@ -157,6 +157,19 @@ const handleChange = () => {
     model.value[editorItem.prop] = editor.getHtml()
   }
 };
+// 提交表单
+const submitFields = () => {
+  if (!form.value) return false
+  form.value.validate((valid) => {
+    if (valid) {
+      ElMessage.success('提交成功')
+      return true
+    } else {
+      ElMessage.error('表单并未配置完全，请检查')
+      return false
+    }
+  })
+}
 
 // 重置表单项内容
 const resetFields = () => {
@@ -166,10 +179,13 @@ const resetFields = () => {
   if (editor) {
     editor.setHtml(editorItem.value)
   }
+  ElMessage.success('重置成功')
 }
 
 defineExpose({
-  resetFields
+  resetFields,
+  submitFields,
+  form: form.value,
 })
 
 </script>

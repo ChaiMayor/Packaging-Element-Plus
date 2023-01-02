@@ -10,6 +10,7 @@ import chooseTime from "./chooseTime/index.ts";
 import chooseDate from "./chooseDate/index.ts";
 import chooseCity from "./chooseCity/index.ts";
 import form from "./form/index.ts";
+import modalForm from "./modalForm/index.ts";
 
 const allComponents = [
   chooseIcon,
@@ -23,6 +24,7 @@ const allComponents = [
   chooseDate,
   chooseCity,
   form,
+  modalForm,
 ];
 
 export default {
