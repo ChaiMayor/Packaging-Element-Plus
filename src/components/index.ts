@@ -11,6 +11,7 @@ import chooseDate from "./chooseDate/index.ts";
 import chooseCity from "./chooseCity/index.ts";
 import form from "./form/index.ts";
 import modalForm from "./modalForm/index.ts";
+import table from "./table/index.ts";
 
 const allComponents = [
   chooseIcon,
@@ -25,6 +26,7 @@ const allComponents = [
   chooseCity,
   form,
   modalForm,
+  table,
 ];
 
 export default {

@@ -252,6 +252,45 @@ console.log($attrsInstance)
 
  
 
+## 6. 子组件暴露数据给父组件
+
+子组件 `m-table` 使用 `defineExpose` 函数进行暴露数据，该函数不需要引入直接使用
+
+~~~vue
+<script setup lang="ts">
+defineExpose({
+  // 可编辑单元格确定
+  clickCheck,
+  // 可编辑单元格取消
+  clickClose,
+  // 可编辑行的确定
+  confirmEditRow,
+  // 可编辑行的取消
+  cancelEditRow,
+  // 删除行
+  deleteRow,
+  // 当前表格的数据
+  tableDataClone
+})
+</script>
+~~~
+
+父组件使用时，通过 `ref` 获取到子组件 `m-table` 然后通过 `.value` 获取传递过来的数据
+
+~~~vue
+<tamplate>
+	<m-table ref="table"></m-table>
+</tamplate>
+
+<script setup lang="ts">
+  // 表格的ref
+  const table = ref()
+  
+  // 获取表格数据
+  console.log(table.value.tableDataClone[0].date);
+</script>
+~~~
+
 
 
 # 四、学习到的新API
@@ -287,7 +326,25 @@ console.log(slots)
 
 
 
-## 2. scrollIntoView 滚动条跳转指定元素位置
+## 2. useAttrs
+
+> 用于获取父组件传递的一些没有提前声明的数据
+
+~~~vue
+<!-- 子组件 -->
+<script>
+	import { useAttrs } from 'vue'
+  let attrs = useAttrs()
+
+  console.log(attrs);
+</script>
+~~~
+
+![image-20230103163739437](https://oss.zhishiyu.online/markdown_images/202301031637547.png) 
+
+
+
+## 3. scrollIntoView 滚动条跳转指定元素位置
 
 > 参考文档：[详细介绍scrollIntoView（）方法属性_永远的新手的博客-CSDN博客_scrollintoview](https://blog.csdn.net/learn8more/article/details/108047794)
 
@@ -330,7 +387,7 @@ URL中hash标记的进化
 
 
 
-## 3. flat 数组扁平化
+## 4. flat 数组扁平化
 
 > 参考文章：[es6数组的flat()方法_木蓝茶陌*_*的博客-CSDN博客_flat()](https://blog.csdn.net/jyn15159/article/details/121241124)
 
@@ -380,7 +437,7 @@ console.log(arr4.flat());   // [1, 2, 4, 5]
 
 
 
-## 4. includes 查询是否存在某个值
+## 5. includes 查询是否存在某个值
 
 > 参考文档：[includes()的使用场景和作用。_hello big_bear的博客-CSDN博客_includes()方法的作用是什么?](https://blog.csdn.net/big_beer/article/details/120023917)
 

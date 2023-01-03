@@ -12,6 +12,7 @@ import "element-plus/dist/index.css";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
 import "./assets/main.css";
+import "@/mock/index.ts";
 
 const app = createApp(App);
 

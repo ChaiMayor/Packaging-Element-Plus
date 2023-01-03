@@ -65,4 +65,9 @@ export default [
     icon: "el-icon-setting",
     path: "/modalForm",
   },
+  {
+    title: "表格",
+    icon: "el-icon-memo",
+    path: "/table",
+  },
 ];
