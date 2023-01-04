@@ -70,4 +70,9 @@ export default [
     icon: "el-icon-memo",
     path: "/table",
   },
+  {
+    title: "日历",
+    icon: "el-icon-suitcase",
+    path: "/calendar",
+  },
 ];

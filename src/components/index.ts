@@ -1,17 +1,18 @@
 import type { App } from "vue";
-import chooseIcon from "./chooseIcon/index.ts";
-import chooseArea from "./chooseArea/index.ts";
-import trend from "./trend/index.ts";
-import notification from "./notification/index.ts";
-import list from "./list/index.ts";
-import menu from "./menu/index.ts";
-import progress from "./progress/index.ts";
-import chooseTime from "./chooseTime/index.ts";
-import chooseDate from "./chooseDate/index.ts";
-import chooseCity from "./chooseCity/index.ts";
-import form from "./form/index.ts";
-import modalForm from "./modalForm/index.ts";
-import table from "./table/index.ts";
+import chooseIcon from "./chooseIcon/index";
+import chooseArea from "./chooseArea/index";
+import trend from "./trend/index";
+import notification from "./notification/index";
+import list from "./list/index";
+import menu from "./menu/index";
+import progress from "./progress/index";
+import chooseTime from "./chooseTime/index";
+import chooseDate from "./chooseDate/index";
+import chooseCity from "./chooseCity/index";
+import form from "./form/index";
+import modalForm from "./modalForm/index";
+import table from "./table/index";
+import calendar from "./calendar/index";
 
 const allComponents = [
   chooseIcon,
@@ -27,6 +28,7 @@ const allComponents = [
   form,
   modalForm,
   table,
+  calendar,
 ];
 
 export default {

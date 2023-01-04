@@ -12,6 +12,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.0.2",
+    "@fullcalendar/daygrid": "^6.0.2",
+    "@fullcalendar/interaction": "^6.0.2",
     "@types/lodash": "^4.14.191",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
