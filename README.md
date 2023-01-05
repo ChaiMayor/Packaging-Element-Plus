@@ -636,7 +636,668 @@ const changeKey = (arr: any[], key: string[]) => {
 
 
 
+# 六、项目上线
 
+## 1. vite 打包全部组件
+
+### 1）command
+
+在根目录新建 `command` 文件夹，新建文件 `build.js` 编写 vite 和 node 代码，这段不了解，所以直接复制了
+
+~~~js
+const path = require("path");
+const fsExtra = require("fs-extra");
+const fs = require("fs");
+const { defineConfig, build } = require("vite");
+const vue = require("@vitejs/plugin-vue");
+const vueJsx = require("@vitejs/plugin-vue-jsx");
+
+const entryDir = path.resolve(__dirname, "../packages");
+// const entryDir = path.resolve(__dirname, '../components')
+const outputDir = path.resolve(__dirname, "../m-ui");
+
+const baseConfig = defineConfig({
+  configFile: false,
+  publicDir: false,
+  plugins: [vue(), vueJsx()],
+});
+
+const rollupOptions = {
+  external: ["vue", "vue-router"],
+  output: {
+    globals: {
+      vue: "Vue",
+    },
+  },
+};
+
+//全量构建
+const buildAll = async () => {
+  await build(
+    defineConfig({
+      ...baseConfig,
+      build: {
+        rollupOptions,
+        lib: {
+          entry: path.resolve(entryDir, "index.ts"),
+          name: "index",
+          fileName: "index",
+          formats: ["es", "umd"],
+        },
+        outDir: outputDir,
+      },
+    })
+  );
+};
+
+const buildSingle = async (name) => {
+  await build(
+    defineConfig({
+      ...baseConfig,
+      build: {
+        rollupOptions,
+        lib: {
+          entry: path.resolve(entryDir, name),
+          name: "index",
+          fileName: "index",
+          formats: ["es", "umd"],
+        },
+        outDir: path.resolve(outputDir, name),
+      },
+    })
+  );
+};
+
+// 生成组件的 package.json 文件
+const createPackageJson = (name) => {
+  const fileStr = `{
+  "name": "${name}",
+  "version": "0.0.0",
+  "main": "index.umd.js",
+  "module": "index.es.js",
+  "style": "style.css"
+}`;
+
+  fsExtra.outputFile(
+    path.resolve(outputDir, `${name}/package.json`),
+    fileStr,
+    "utf-8"
+  );
+};
+
+const buildLib = async () => {
+  await buildAll();
+  // 获取组件名称组成的数组
+  const components = fs.readdirSync(entryDir).filter((name) => {
+    const componentDir = path.resolve(entryDir, name);
+    const isDir = fs.lstatSync(componentDir).isDirectory();
+    return isDir && fs.readdirSync(componentDir).includes("index.ts");
+  });
+
+  // 循环一个一个组件构建
+  for (const name of components) {
+    // 构建单组件
+    await buildSingle(name);
+
+    // 生成组件的 package.json 文件
+    createPackageJson(name);
+  }
+};
+
+buildLib();
+
+~~~
+
+
+
+### 2）packages
+
+在根目录新建 `packages` 文件夹，把 `src/components` 内容全部复制到该文件夹下，再把 `components` 组件里面使用到的 `hooks 和 utils` 方法复制到该文件夹下
+
+如果有 `css` 文件的话，也需要复制到该文件夹下，然后在 `index.ts` 里面将 `css` 代码进行引入
+
+![image-20230104154919404](https://oss.zhishiyu.online/markdown_images/202301041549557.png) 
+
+并把 `packages` 文件夹里面的所有文件的引入路径，从 `@/xxx` 全部转换为 `../../` 转换为正确的路径，因为文件结构发生了变化
+
+还需要在此新建一个文件 `vue.d.ts` 文件，写如下内容：
+
+~~~js
+declare module "*.vue" {
+  import { DefineComponent } from "vue";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/ban-types
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
+}
+~~~
+
+ ![image-20230104154742612](https://oss.zhishiyu.online/markdown_images/202301041547712.png) 
+
+
+
+### 3）package.json 配置脚本命令
+
+下载 `npm i fs-extra -D` 包
+
+~~~json
+"scripts": {
+  "dev": "vite",
+  "build": "run-p type-check build-only",
+  "preview": "vite preview",
+  // 新增内容
+  "build:components": "node ./command/build.js",
+  "lib": "npm run build:components"
+},
+~~~
+
+执行 `npm run lib` 打包组件，获得如下内容
+
+![image-20230104155651117](https://oss.zhishiyu.online/markdown_images/202301041556197.png) 
+
+
+
+### 4）引入全局组件
+
+在 `src/main.ts` 里面输入如下内容：
+
+~~~js
+/**
+ * 全局引入打包组件
+ */
+import mUI from "../m-ui/index.mjs";
+import "../m-ui/style.css";
+
+app.use(mUI).mount("#app")
+~~~
+
+
+
+### 5）单独引入组件
+
+在 `src/main.ts` 里面输入如下内容：
+
+~~~js
+/**
+ * 单一引入某一打包组件
+ */
+import mForm from "../m-ui/form/index.mjs";
+import "../m-ui/form/style.css";
+
+app.use(mForm).mount("#app")
+~~~
+
+
+
+## 2. 发布组件库到 npm 
+
+### 1）新建 package.json 配置
+
+在 `m-ui` 目录下，新建 `package.json` 文件，配置如下内容：
+
+~~~js
+{
+  "name": "xiaochai-element-plus-packaging",
+  "version": "1.0.0",
+  "main": "index.umd.js",
+  "module": "index.mjs",
+  "types": "index.d.ts",
+  "author": {
+    "name": "xiaochai"
+  },
+  "keywords": [
+    "element-plus",
+    "ts",
+    "封装组件",
+    "二次封装",
+    "vue-components"
+  ]
+}
+~~~
+
+~~~js
+{
+  "name": "xiaochai-element-plus-packaging",
+  "version": "1.0.0",	
+  "main": "index.umd.js",		// 主入口
+  "module": "index.mjs",		// 模块
+  "types": "index.d.ts",		// 告诉别人我们是vue的一个插件
+  "author": {
+    "name": "xiaochai"	
+  },
+  "keywords": [			// 别人通过这些关键字可以搜到这个包
+    "element-plus",
+    "ts",
+    "封装组件",
+    "二次封装",
+    "vue-components"
+  ]
+}
+~~~
+
+
+
+### 2）注册 npm 账号
+
+1. 访问 https://www.npmjs.com/ 网站，点击 `sign up` 按钮，进入注册用户界面
+2. 填写账号相关的信息：Full Name、Public Email、Username、Password
+3. 点击 Create an Account 按钮，注册账号
+4. 登录邮箱，点击验证链接，进行账号的验证
+
+
+
+### 3）登录 npm 账号
+
+npm 账号注册完成后，可以在终端中执行 `npm login` 命令，依次输入用户名、密码、邮箱后，即可登录成功
+
+![image-20220823105652285](https://oss.zhishiyu.online/markdown_images/202301051127721.png) 
+
+注意：
+
++ 在运行 `npm login` 命令之前，必须先把`下包的服务器地址`切换为 npm 的官方服务器，否则登录会失败
+
+  ~~~bash
+  # 切换到 npm 官方服务器
+  nrm use npm
+  
+  # nrm 不存在的话先下载到全局
+  npm i nrm -g
+  
+  # 登录完成后记得切换回去淘宝镜像
+  nrm use taobao
+  ~~~
+
++ 并且输入密码时，会看不到输入的内容，这里做了遮挡的操作，只要输进去密码了就行
+
++ 输入完邮箱后，会给邮箱发一个验证码，将验证码输入到 `Enter one-time password` 即可
+
+
+
+### 4）把包发布到 npm 上
+
+将终端切换到`包的根目录`之后，运行 `npm publish` 命令，即可将包发布到 npm 上（注意：`包名不能雷同`）
+
+发布完成后就可以，[itachai-tools - npm (npmjs.com)](https://www.npmjs.com/package/itachai-tools) npm 上搜索到自己发布的包了
+
+![image-20220823110423279](https://oss.zhishiyu.online/markdown_images/202301051127725.png) 
+
+
+
+### 5）删除已发布的包
+
+运行 `npm unpublish 包名 --force` 命令，即可从 npm 删除已发布的包
+
+![image-20220823111143183](https://oss.zhishiyu.online/markdown_images/202301051128316.png) 
+
+注意：
+
++ npm unpublish 命令只能删除 `72小时以内` 发布的包
++ npm unpublish 删除的包，在 `24小时内` 不允许重复发布
++ 发布包的时候要慎重，`尽量不要往npm上发布没有意义的包`！
+
+
+
+### 6）测试发布的包
+
+使用 vite 快速创建一个项目：
+
+~~~bash
+npm create vite@latest my-vue-app -- --template vue-ts
+~~~
+
+安装依赖：
+
+~~~bash
+# ElementPlus 和 icon图标包
+npm install element-plus @element-plus/icons-vue
+
+# 安装自己发布的包
+npm i xiaochai-element-plus-packaging
+~~~
+
+> 此时注意
+>
+> 1. 如果你使用的是 npm 官方源，那么可以正常下载，因为已经发布到 npm 官方源上面了
+> 2. 如果你使用的是 taobao 镜像源，那么暂时还不能下载，因为此时 taobao 还没有及时克隆最新的 npm 官方源
+
+![image-20230105114616015](https://oss.zhishiyu.online/markdown_images/202301051146078.png) 
+
+注册全局资源部包：
+
+~~~js
+import { createApp } from "vue";
+import "./style.css";
+import App from "./App.vue";
+const app = createApp(App);
+
+// ElementPlus 包
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+
+// 注册ElementPlus全局icon包
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+	app.component(key, component);
+}
+
+// 引入自己的组件包，并且全局注册
+import mUI from "xiaochai-element-plus-packaging";
+import "xiaochai-element-plus-packaging/style.css";
+
+// 注册自己的全局 icon 组件
+import { toLine } from "xiaochai-element-plus-packaging/utils/index";
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+	app.component(`el-icon-${toLine(key)}`, component);
+}
+
+// 挂载自己的组件和ElementPlus
+app.use(ElementPlus).use(mUI).mount("#app");
+
+~~~
+
+单一注册自己的组件包：
+
+~~~js
+// 引入自己的组件包
+import chooseIcon from "xiaochai-element-plus-packaging/chooseIcon/index";
+// 有的组件有css，有的组件没有css，看情况引入
+import "xiaochai-element-plus-packaging/chooseIcon/style.css";
+
+// 挂载自己的组件和ElementPlus
+app.use(ElementPlus).use(chooseIcon).mount("#app");
+~~~
+
+
+
+### 7）更新发布的组件包
+
+将 `package.json 和 index.d.ts` 将内容复制出来，放到根目录一个叫 `demo` 的文件夹
+
+![image-20230105124443645](https://oss.zhishiyu.online/markdown_images/202301051244705.png) 
+
+更新 `packages/index.ts` 文件，添加如下内容：
+
+~~~js
+import { toLine } from "./utils";
+// 注册ElementPlus全局icon包
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+
+export default {
+  install(app: App) {
+    // 注册自己的全局 icon 组件
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`el-icon-${toLine(key)}`, component);
+    }
+    allComponents.map((item) => app.use(item));
+  },
+};
+~~~
+
+更新 `command/build.js` 脚本文件：
+
+~~~js
+// 生成组件的 package.json 文件
+// 生成 index.d.ts 告诉用户，我们这个组件库是一个vue插件
+const createPackageJson = (name) => {
+  const fileStr = `{
+  "name": "${name}",
+  "version": "0.0.0",
+  "main": "index.umd.js",
+  "module": "index.es.js",
+  "style": "style.css"
+}`;
+
+  const indexDTs = `
+  import { App } from "vue";
+  declare const _default: {
+    install(app: App): void;
+  };
+  export default _default;
+  `;
+
+  fsExtra.outputFile(
+    path.resolve(outputDir, `${name}/package.json`),
+    fileStr,
+    "utf-8"
+  );
+  fsExtra.outputFile(
+    path.resolve(outputDir, `${name}/index.d.ts`),
+    indexDTs,
+    "utf-8"
+  );
+};
+~~~
+
+执行 `npm run lib` 重新运行脚本文件，再把 `demo/index.d.ts和package.json` 放到 `m-ui` 目录下
+
+![image-20230105125012526](https://oss.zhishiyu.online/markdown_images/202301051250588.png) 
+
+最后将版本号更新一下即可
+
+![image-20230105125022198](https://oss.zhishiyu.online/markdown_images/202301051250260.png) 
+
+再次切换到 `m-ui` 终端目录下，执行 `npm run lib` 命令，更新发布的 `npm` 包
+
+
+
+### 8）再次测试更新的组件包
+
+重新下载组件包 `npm i xiaochai-element-plus-packaging` 
+
+在 `main.ts` 里面重新引入文件：
+
+~~~js
+import { createApp } from "vue";
+import "./style.css";
+import App from "./App.vue";
+const app = createApp(App);
+
+// ElementPlus 包
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+
+// 引入自己的组件包
+import mUI from "xiaochai-element-plus-packaging";
+import "xiaochai-element-plus-packaging/style.css";
+
+// 引入单一组件包
+// import chooseIcon from "xiaochai-element-plus-packaging/chooseIcon/index";
+// import "xiaochai-element-plus-packaging/chooseIcon/style.css";
+
+// 挂载自己的组件和ElementPlus
+app.use(ElementPlus).use(mUI).mount("#app");
+~~~
+
+这次优化了引入文件数量，改到了组件包里面自动引入
+
+
+
+## 3. 部署组件的静态网站到 GitHub 或 Gitee
+
+### 1）修改 vue 文件配置
+
+修改路由配置从 `history` 变成 `hash` 路由
+
+~~~js
+import {
+  createRouter,
+  createWebHistory,
+  createWebHashHistory,
+} from "vue-router";
+
+const router = createRouter({
+  // 改成 hash 路由
+  history: createWebHashHistory(import.meta.env.BASE_URL),
+})
+
+export default router;
+~~~
+
+在修改 线上 地址的 `base ` 基本路径
+
+~~~js
+// https://vitejs.dev/config/
+export default defineConfig({
+	...,
+  base: "./",
+});
+~~~
+
+构建项目 `build run npm`，打包成 `dist` 文件夹
+
+> 如果命令运行失败，[2. 构建项目出错](#2. 构建项目出错) ，跳转这个链接查看
+
+
+
+### 2）发布到 Github 
+
+#### A. 发布到已有的代码仓库的一个分支上面
+
+将打包出来的 `dist` 文件夹复制到桌面上
+
+在 `dist` 文件夹下新开一个终端，依次执行如下命令：
+
+~~~bash
+# 初始化 git
+git init
+
+# 对所有文件进行暂存
+git add .
+
+# 进行一次提交 注意是双引号，不要写单引号
+git commit -m "完成了二次组件代码的打包"
+~~~
+
+将仓库源切换到已有的代码仓库：
+
+~~~bash
+# 将当前项目的仓库修改为对应的仓库
+git remote add origin https://github.com/ChaiMayor/Packaging-ElementUI
+~~~
+
+> 仓库地址获取方法：直接打开对应仓库，然后复制地址栏地址即可
+
+ ![image-20230105134738472](https://oss.zhishiyu.online/markdown_images/202301051347557.png) 
+
+---
+
+
+
+现在新建一个分支：
+
+~~~bash
+# 创建一个新的分支，并指向它
+git checkout -b dist 
+~~~
+
+然后推送将代码推送到远程仓库：
+
+~~~bash
+# 推送到远程仓库，-u 如果分支名不存在的话，才写
+git push -u origin dist
+~~~
+
+这个时候查看 `GitHub仓库` 就会发现提交成功
+
+![image-20230105135542099](https://oss.zhishiyu.online/markdown_images/202301051355214.png)
+
+---
+
+
+
+在仓库里面找到 `Settings` 设置，在左侧栏中找到 `Pages`，接着在右侧找到 `Branch` 然后选择 `dist` 分支，带你级 `Save` 保存即可
+
+![image-20230105140018776](https://oss.zhishiyu.online/markdown_images/202301051400854.png) 
+
+这里时候上方就会有 `蓝色的地址了`，可以通过这个地址访问 `演示项目` 了
+
+![image-20230105140204339](https://oss.zhishiyu.online/markdown_images/202301051402413.png) 
+
+
+
+## 4. 先快速启动一个服务，测试打包文件是否可以正常访问
+
+使用 `http-server` 快速打开一个服务
+
+在 `dist` 文件件下，运行执行命令：`http-server -p 端口号` 快速启动一个服务
+
+![image-20230105142017567](https://oss.zhishiyu.online/markdown_images/202301051420654.png) 
+
+
+
+
+
+# 七、遇到的 bug 和 错误
+
+## 1. main.ts 里面引入 App 文件飘红
+
+需要在根目录下的 `env.d.ts` 加上如下代码：
+
+~~~js
+/// <reference types="vite/client" />
+
+declare module "*.vue" {
+  import { DefineComponent } from "vue";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/ban-types
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
+}
+~~~
+
+![image-20230105132816516](https://oss.zhishiyu.online/markdown_images/202301051328611.png) 
+
+
+
+## 2. 构建项目出错
+
+![image-20230105132930851](https://oss.zhishiyu.online/markdown_images/202301051329909.png) 
+
+在 `package.json` 里面将 `build` 后面的脚本改一下
+
+~~~js
+  "scripts": {
+    "dev": "vite",
+    // "build": "run-p type-check build-only",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:components": "node ./command/build.js",
+    "lib": "npm run build:components"
+  },
+~~~
+
+修改为：
+
+~~~js
+ "build": "vite build"
+~~~
+
+
+
+## 3. GitHub 部署页面失败
+
+打开页面时，资源加载失败
+
+![image-20230105152651974](https://oss.zhishiyu.online/markdown_images/202301051526096.png) 
+
+原因：
+
+1. 没有配置线上地址的 base 基本路径
+2. 没有使用 hash 路由（像这种带有前缀的路径一定要使用 hash 路由）
+
+解决：
+
+1. 在 `vite.config,ts` 里面配置线上的基本路径
+
+   ![image-20230105152914685](https://oss.zhishiyu.online/markdown_images/202301051529782.png) 
+
+2. 变更路由为 `hash` 路由
+
+   ![image-20230105152956643](https://oss.zhishiyu.online/markdown_images/202301051529737.png) 
+
+> 参考文档：
+>
+> [共享配置 | Vite 官方中文文档 (vitejs.dev)](https://cn.vitejs.dev/config/shared-options.html#base)
+>
+> [构建生产版本 | Vite 官方中文文档 (vitejs.dev)](https://cn.vitejs.dev/guide/build.html#browser-compatibility)
 
 
 

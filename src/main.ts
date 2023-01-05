@@ -1,7 +1,20 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { toLine } from "./utils";
+/**
+ * 全局引入未打包组件
+ */
 import mUI from "@/components";
+/**
+ * 全局引入打包组件
+ */
+// import mUI from "../m-ui/index.mjs";
+// import "../m-ui/style.css";
+/**
+ * 单一引入某一打包组件
+ */
+// import mForm from "../m-ui/form/index.mjs";
+// import "../m-ui/form/style.css";
 
 import App from "./App.vue";
 import router from "./router";

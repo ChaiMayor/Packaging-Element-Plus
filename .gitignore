@@ -12,6 +12,10 @@ node_modules
 dist
 dist-ssr
 coverage
+command
+demo
+m-ui
+packages
 *.local
 
 /cypress/videos/
